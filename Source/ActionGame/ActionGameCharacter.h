@@ -69,9 +69,9 @@ protected:
 
 public:
 	/** Returns CameraBoom subobject **/
-	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
+	FORCEINLINE USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	/** Returns FollowCamera subobject **/
-	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+	FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
 	UFUNCTION(BlueprintCallable)
 	FCharacterData GetCharacterData() const;
@@ -80,6 +80,8 @@ public:
 	void SetCharacterData(const FCharacterData& InCharacterData);
 
 	class UFootstepsComponent* GetFootstepsComponent() const;
+
+	void OnMaxMovementSpeedChanged(const FOnAttributeChangeData& Data);
 
 protected:
 	UPROPERTY(ReplicatedUsing = OnRep_CharacterData)
@@ -94,7 +96,7 @@ protected:
 	class UCharacterDataAsset* CharacterDataAsset;
 
 	UPROPERTY(BlueprintReadOnly)
-	class UFootstepsComponent* FootstepsComponent;
+	UFootstepsComponent* FootstepsComponent;
 
 	// Enhanced Input
 
@@ -105,19 +107,22 @@ protected:
 	class UInputAction* MoveForwardInputAction;
 
 	UPROPERTY(EditDefaultsOnly)
-	class UInputAction* MoveSideInputAction;
+	UInputAction* MoveSideInputAction;
 
 	UPROPERTY(EditDefaultsOnly)
-	class UInputAction* TurnInputAction;
+	UInputAction* TurnInputAction;
 
 	UPROPERTY(EditDefaultsOnly)
-	class UInputAction* LookUpInputAction;
+	UInputAction* LookUpInputAction;
 
 	UPROPERTY(EditDefaultsOnly)
-	class UInputAction* JumpInputAction;
+	UInputAction* JumpInputAction;
 
 	UPROPERTY(EditDefaultsOnly)
-	class UInputAction* CrouchInputAction;
+	UInputAction* CrouchInputAction;
+
+	UPROPERTY(EditDefaultsOnly)
+	UInputAction* SprintInputAction;
 
 	void OnMoveForwardAction(const FInputActionValue& Value);
 	void OnMoveSideAction(const FInputActionValue& Value);
@@ -127,6 +132,8 @@ protected:
 	void OnJumpActionStopped(const FInputActionValue& Value);
 	void OnCrouchActionStarted(const FInputActionValue& Value);
 	void OnCrouchActionStopped(const FInputActionValue& Value);
+	void OnSprintActionStarted(const FInputActionValue& Value);
+	void OnSprintActionStopped(const FInputActionValue& Value);
 
 	// Gameplay Events
 	UPROPERTY(EditDefaultsOnly)
@@ -138,9 +145,14 @@ protected:
 	UPROPERTY(EditDefaultsOnly)
 	FGameplayTagContainer CrouchTags;
 
+	UPROPERTY(EditDefaultsOnly)
+	FGameplayTagContainer SprintTags;
+
 	// Gameplay Effects
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UGameplayEffect> CrouchStateEffect;
+
+	FDelegateHandle MaxMovementSpeedChangedDelegateHandle;
 
 };
 
