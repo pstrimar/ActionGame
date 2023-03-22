@@ -20,6 +20,7 @@
 
 #include "ActorComponents/AG_CharacterMovementComponent.h"
 #include "ActorComponents/FootstepsComponent.h"
+#include "AbilitySystemLog.h"
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -136,6 +137,38 @@ void AActionGameCharacter::Landed(const FHitResult& Hit)
 	}
 }
 
+void AActionGameCharacter::OnStartCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust)
+{
+	Super::OnStartCrouch(HalfHeightAdjust, ScaledHalfHeightAdjust);
+
+	if (!CrouchStateEffect.Get()) return;
+
+	if (AbilitySystemComponent)
+	{
+		FGameplayEffectContextHandle EffectContext = AbilitySystemComponent->MakeEffectContext();
+
+		FGameplayEffectSpecHandle SpecHandle = AbilitySystemComponent->MakeOutgoingSpec(CrouchStateEffect, 1, EffectContext);
+		if (SpecHandle.IsValid())
+		{
+			FActiveGameplayEffectHandle ActiveGEHandle = AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+			if (!ActiveGEHandle.WasSuccessfullyApplied())
+			{
+				ABILITY_LOG(Log, TEXT("Ability %s failed to apply crouch effect %s"), *GetName(), *GetNameSafe(CrouchStateEffect));
+			}
+		}
+	}
+}
+
+void AActionGameCharacter::OnEndCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust)
+{
+	if (AbilitySystemComponent && CrouchStateEffect.Get())
+	{
+		AbilitySystemComponent->RemoveActiveGameplayEffectBySourceEffect(CrouchStateEffect, AbilitySystemComponent);
+	}
+
+	Super::OnEndCrouch(HalfHeightAdjust, ScaledHalfHeightAdjust);
+}
+
 //////////////////////////////////////////////////////////////////////////
 // Input
 
@@ -167,6 +200,12 @@ void AActionGameCharacter::SetupPlayerInputComponent(class UInputComponent* Play
 		if (LookUpInputAction)
 		{
 			EnhancedInputComponent->BindAction(LookUpInputAction, ETriggerEvent::Triggered, this, &AActionGameCharacter::OnLookUpAction);
+		}
+
+		if (CrouchInputAction)
+		{
+			EnhancedInputComponent->BindAction(CrouchInputAction, ETriggerEvent::Started, this, &AActionGameCharacter::OnCrouchActionStarted);
+			EnhancedInputComponent->BindAction(CrouchInputAction, ETriggerEvent::Completed, this, &AActionGameCharacter::OnCrouchActionStopped);
 		}
 	}
 }
@@ -236,7 +275,23 @@ void AActionGameCharacter::OnJumpActionStarted(const FInputActionValue& Value)
 
 void AActionGameCharacter::OnJumpActionStopped(const FInputActionValue& Value)
 {
-	
+	//StopJumping();
+}
+
+void AActionGameCharacter::OnCrouchActionStarted(const FInputActionValue& Value)
+{
+	if (AbilitySystemComponent)
+	{
+		AbilitySystemComponent->TryActivateAbilitiesByTag(CrouchTags, true);
+	}
+}
+
+void AActionGameCharacter::OnCrouchActionStopped(const FInputActionValue& Value)
+{
+	if (AbilitySystemComponent)
+	{
+		AbilitySystemComponent->CancelAbilities(&CrouchTags);
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////

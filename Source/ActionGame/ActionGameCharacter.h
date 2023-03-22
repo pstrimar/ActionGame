@@ -40,6 +40,8 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PawnClientRestart() override;
 	virtual void Landed(const FHitResult& Hit) override;
+	virtual void OnStartCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust) override;
+	virtual void OnEndCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust) override;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Input)
 	float TurnRate;
@@ -114,12 +116,17 @@ protected:
 	UPROPERTY(EditDefaultsOnly)
 	class UInputAction* JumpInputAction;
 
+	UPROPERTY(EditDefaultsOnly)
+	class UInputAction* CrouchInputAction;
+
 	void OnMoveForwardAction(const FInputActionValue& Value);
 	void OnMoveSideAction(const FInputActionValue& Value);
 	void OnTurnAction(const FInputActionValue& Value);
 	void OnLookUpAction(const FInputActionValue& Value);
 	void OnJumpActionStarted(const FInputActionValue& Value);
 	void OnJumpActionStopped(const FInputActionValue& Value);
+	void OnCrouchActionStarted(const FInputActionValue& Value);
+	void OnCrouchActionStopped(const FInputActionValue& Value);
 
 	// Gameplay Events
 	UPROPERTY(EditDefaultsOnly)
@@ -128,6 +135,12 @@ protected:
 	UPROPERTY(EditDefaultsOnly)
 	FGameplayTagContainer InAirTags;
 
+	UPROPERTY(EditDefaultsOnly)
+	FGameplayTagContainer CrouchTags;
+
+	// Gameplay Effects
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UGameplayEffect> CrouchStateEffect;
 
 };
 
