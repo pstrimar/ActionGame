@@ -16,6 +16,9 @@ class UAG_AttributeSetBase;
 class UGameplayEffect;
 class UGameplayAbility;
 
+class UAG_MotionWarpingComponent;
+class UAG_CharacterMovementComponent;
+
 UCLASS(config=Game)
 class AActionGameCharacter : public ACharacter, public IAbilitySystemInterface
 {
@@ -43,6 +46,8 @@ public:
 	virtual void OnStartCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust) override;
 	virtual void OnEndCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust) override;
 
+	UAG_MotionWarpingComponent* GetAGMotionWarpingComponent() const;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Input)
 	float TurnRate;
 
@@ -59,6 +64,10 @@ protected:
 	UPROPERTY(Transient)
 	UAG_AttributeSetBase* AttributeSet;
 			
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MotionWarp")
+	UAG_MotionWarpingComponent* AGMotionWarpingComponent;
+
+	UAG_CharacterMovementComponent* AGCharacterMovementComponent;
 
 protected:
 	// APawn interface

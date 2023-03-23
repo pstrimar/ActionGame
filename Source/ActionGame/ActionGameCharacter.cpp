@@ -19,6 +19,7 @@
 #include "Net/UnrealNetwork.h"
 
 #include "ActorComponents/AG_CharacterMovementComponent.h"
+#include "ActorComponents/AG_MotionWarpingComponent.h"
 #include "ActorComponents/FootstepsComponent.h"
 #include "AbilitySystemLog.h"
 
@@ -52,6 +53,8 @@ AActionGameCharacter::AActionGameCharacter(const FObjectInitializer& ObjectIniti
 	GetCharacterMovement()->MinAnalogWalkSpeed = 20.f;
 	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
 
+	AGCharacterMovementComponent = Cast<UAG_CharacterMovementComponent>(GetCharacterMovement());
+
 	// Create a camera boom (pulls in towards the player if there is a collision)
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(RootComponent);
@@ -77,6 +80,8 @@ AActionGameCharacter::AActionGameCharacter(const FObjectInitializer& ObjectIniti
 	AttributeSet = CreateDefaultSubobject<UAG_AttributeSetBase>(TEXT("AttributeSet"));
 
 	FootstepsComponent = CreateDefaultSubobject<UFootstepsComponent>(TEXT("FootstepsComponent"));
+
+	AGMotionWarpingComponent = CreateDefaultSubobject<UAG_MotionWarpingComponent>(TEXT("MotionWarpingComponent"));
 }
 
 void AActionGameCharacter::PostInitializeComponents()
@@ -174,6 +179,11 @@ void AActionGameCharacter::OnEndCrouch(float HalfHeightAdjust, float ScaledHalfH
 	}
 
 	Super::OnEndCrouch(HalfHeightAdjust, ScaledHalfHeightAdjust);
+}
+
+UAG_MotionWarpingComponent* AActionGameCharacter::GetAGMotionWarpingComponent() const
+{
+	return AGMotionWarpingComponent;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -279,11 +289,7 @@ void AActionGameCharacter::OnLookUpAction(const FInputActionValue& Value)
 
 void AActionGameCharacter::OnJumpActionStarted(const FInputActionValue& Value)
 {
-	FGameplayEventData Payload;
-	Payload.Instigator = this;
-	Payload.EventTag = JumpEventTag;
-
-	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, JumpEventTag, Payload);
+	AGCharacterMovementComponent->TryTraversal(AbilitySystemComponent);
 }
 
 void AActionGameCharacter::OnJumpActionStopped(const FInputActionValue& Value)
