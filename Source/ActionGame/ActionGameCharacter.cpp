@@ -21,6 +21,7 @@
 #include "ActorComponents/AG_CharacterMovementComponent.h"
 #include "ActorComponents/AG_MotionWarpingComponent.h"
 #include "ActorComponents/FootstepsComponent.h"
+#include "ActorComponents/InventoryComponent.h"
 #include "AbilitySystemLog.h"
 
 
@@ -82,6 +83,8 @@ AActionGameCharacter::AActionGameCharacter(const FObjectInitializer& ObjectIniti
 	FootstepsComponent = CreateDefaultSubobject<UFootstepsComponent>(TEXT("FootstepsComponent"));
 
 	AGMotionWarpingComponent = CreateDefaultSubobject<UAG_MotionWarpingComponent>(TEXT("MotionWarpingComponent"));
+	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
+	InventoryComponent->SetIsReplicated(true);
 }
 
 void AActionGameCharacter::PostInitializeComponents()
@@ -109,14 +112,14 @@ void AActionGameCharacter::BeginPlay()
 	}
 }
 
-UFootstepsComponent* AActionGameCharacter::GetFootstepsComponent() const
-{
-	return FootstepsComponent;
-}
-
 void AActionGameCharacter::OnMaxMovementSpeedChanged(const FOnAttributeChangeData& Data)
 {
 	GetCharacterMovement()->MaxWalkSpeed = Data.NewValue;
+}
+
+UAbilitySystemComponent* AActionGameCharacter::GetAbilitySystemComponent() const
+{
+	return AbilitySystemComponent;
 }
 
 void AActionGameCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -124,6 +127,7 @@ void AActionGameCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>&
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AActionGameCharacter, CharacterData);
+	DOREPLIFETIME(AActionGameCharacter, InventoryComponent);
 }
 
 void AActionGameCharacter::PawnClientRestart()
@@ -181,11 +185,6 @@ void AActionGameCharacter::OnEndCrouch(float HalfHeightAdjust, float ScaledHalfH
 	Super::OnEndCrouch(HalfHeightAdjust, ScaledHalfHeightAdjust);
 }
 
-UAG_MotionWarpingComponent* AActionGameCharacter::GetAGMotionWarpingComponent() const
-{
-	return AGMotionWarpingComponent;
-}
-
 //////////////////////////////////////////////////////////////////////////
 // Input
 
@@ -229,6 +228,21 @@ void AActionGameCharacter::SetupPlayerInputComponent(class UInputComponent* Play
 		{
 			EnhancedInputComponent->BindAction(SprintInputAction, ETriggerEvent::Started, this, &AActionGameCharacter::OnSprintActionStarted);
 			EnhancedInputComponent->BindAction(SprintInputAction, ETriggerEvent::Completed, this, &AActionGameCharacter::OnSprintActionStopped);
+		}
+
+		if (EquipNextInputAction)
+		{
+			EnhancedInputComponent->BindAction(EquipNextInputAction, ETriggerEvent::Triggered, this, &AActionGameCharacter::OnEquipNextTriggered);
+		}
+
+		if (DropItemInputAction)
+		{
+			EnhancedInputComponent->BindAction(DropItemInputAction, ETriggerEvent::Triggered, this, &AActionGameCharacter::OnDropItemTriggered);
+		}
+
+		if (UnequipInputAction)
+		{
+			EnhancedInputComponent->BindAction(UnequipInputAction, ETriggerEvent::Triggered, this, &AActionGameCharacter::OnUnequipTriggered);
 		}
 	}
 }
@@ -329,6 +343,30 @@ void AActionGameCharacter::OnSprintActionStopped(const FInputActionValue& Value)
 	}
 }
 
+void AActionGameCharacter::OnDropItemTriggered(const FInputActionValue& Value)
+{
+	FGameplayEventData EventPayload;
+	EventPayload.EventTag = UInventoryComponent::DropItemTag;
+	
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, UInventoryComponent::DropItemTag, EventPayload);
+}
+
+void AActionGameCharacter::OnEquipNextTriggered(const FInputActionValue& Value)
+{
+	FGameplayEventData EventPayload;
+	EventPayload.EventTag = UInventoryComponent::EquipNextTag;
+
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, UInventoryComponent::EquipNextTag, EventPayload);
+}
+
+void AActionGameCharacter::OnUnequipTriggered(const FInputActionValue& Value)
+{
+	FGameplayEventData EventPayload;
+	EventPayload.EventTag = UInventoryComponent::UnequipTag;
+
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, UInventoryComponent::UnequipTag, EventPayload);
+}
+
 //////////////////////////////////////////////////////////////////////////
 // Abilities
 
@@ -340,16 +378,6 @@ void AActionGameCharacter::OnRep_CharacterData()
 void AActionGameCharacter::InitFromCharacterData(const FCharacterData& InCharacterData, bool bFromReplication)
 {
 
-}
-
-UAbilitySystemComponent* AActionGameCharacter::GetAbilitySystemComponent() const
-{
-	return AbilitySystemComponent;
-}
-
-FCharacterData AActionGameCharacter::GetCharacterData() const
-{
-	return CharacterData;
 }
 
 void AActionGameCharacter::SetCharacterData(const FCharacterData& InCharacterData)

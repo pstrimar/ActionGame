@@ -18,6 +18,7 @@ class UGameplayAbility;
 
 class UAG_MotionWarpingComponent;
 class UAG_CharacterMovementComponent;
+class UInventoryComponent;
 
 UCLASS(config=Game)
 class AActionGameCharacter : public ACharacter, public IAbilitySystemInterface
@@ -45,8 +46,6 @@ public:
 	virtual void Landed(const FHitResult& Hit) override;
 	virtual void OnStartCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust) override;
 	virtual void OnEndCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust) override;
-
-	UAG_MotionWarpingComponent* GetAGMotionWarpingComponent() const;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Input)
 	float TurnRate;
@@ -83,14 +82,18 @@ public:
 	FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
 	UFUNCTION(BlueprintCallable)
-	FCharacterData GetCharacterData() const;
+	FORCEINLINE FCharacterData GetCharacterData() { return CharacterData; }
+
+	FORCEINLINE UAG_MotionWarpingComponent* GetAGMotionWarpingComponent() { return AGMotionWarpingComponent; }
 
 	UFUNCTION(BlueprintCallable)
 	void SetCharacterData(const FCharacterData& InCharacterData);
 
-	class UFootstepsComponent* GetFootstepsComponent() const;
+	FORCEINLINE class UFootstepsComponent* GetFootstepsComponent() const { return FootstepsComponent; }
 
 	void OnMaxMovementSpeedChanged(const FOnAttributeChangeData& Data);
+
+	FORCEINLINE UInventoryComponent* GetInventoryComponent() { return InventoryComponent; }
 
 protected:
 	UPROPERTY(ReplicatedUsing = OnRep_CharacterData)
@@ -133,6 +136,15 @@ protected:
 	UPROPERTY(EditDefaultsOnly)
 	UInputAction* SprintInputAction;
 
+	UPROPERTY(EditDefaultsOnly)
+	UInputAction* DropItemInputAction;
+
+	UPROPERTY(EditDefaultsOnly)
+	UInputAction* EquipNextInputAction;
+
+	UPROPERTY(EditDefaultsOnly)
+	UInputAction* UnequipInputAction;
+
 	void OnMoveForwardAction(const FInputActionValue& Value);
 	void OnMoveSideAction(const FInputActionValue& Value);
 	void OnTurnAction(const FInputActionValue& Value);
@@ -143,6 +155,9 @@ protected:
 	void OnCrouchActionStopped(const FInputActionValue& Value);
 	void OnSprintActionStarted(const FInputActionValue& Value);
 	void OnSprintActionStopped(const FInputActionValue& Value);
+	void OnDropItemTriggered(const FInputActionValue& Value);
+	void OnEquipNextTriggered(const FInputActionValue& Value);
+	void OnUnequipTriggered(const FInputActionValue& Value);
 
 	// Gameplay Events
 	UPROPERTY(EditDefaultsOnly)
@@ -162,6 +177,11 @@ protected:
 	TSubclassOf<UGameplayEffect> CrouchStateEffect;
 
 	FDelegateHandle MaxMovementSpeedChangedDelegateHandle;
+
+	// Inventory
+
+	UPROPERTY(EditAnywhere, Replicated)
+	UInventoryComponent* InventoryComponent = nullptr;
 
 };
 

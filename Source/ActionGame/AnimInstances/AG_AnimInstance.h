@@ -6,15 +6,17 @@
 #include "Animation/AnimInstance.h"
 #include "AG_AnimInstance.generated.h"
 
-/**
- * 
- */
+class UItemStaticData;
+
 UCLASS()
 class ACTIONGAME_API UAG_AnimInstance : public UAnimInstance
 {
 	GENERATED_BODY()
 	
 protected:
+
+	const UItemStaticData* GetEquippedItemData() const;
+
 	UFUNCTION(BlueprintCallable, meta = (BlueprintThreadSafe))
 	class UBlendSpace* GetLocomotionBlendspace() const;
 
