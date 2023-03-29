@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
+#include "GameplayAbilitySpec.h"
 #include "InventoryItemInstance.generated.h"
 
 /**
@@ -34,10 +35,28 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	virtual void OnEquipped(AActor* InOwner = nullptr);
-	virtual void OnUnequipped();
-	virtual void OnDropped();
+	virtual void OnUnequipped(AActor* InOwner = nullptr);
+	virtual void OnDropped(AActor* InOwner = nullptr);
+
+	UFUNCTION(BlueprintPure)
+	AItemActor* GetItemActor() const;
 
 protected:
 	UPROPERTY(Replicated)
 	class AItemActor* ItemActor = nullptr;
+
+	void TryGrantAbilities(AActor* InOwner);
+
+	void TryRemoveAbilities(AActor* InOwner);
+
+	void TryApplyEffects(AActor* InOwner);
+
+	void TryRemoveEffects(AActor* InOwner);
+
+	UPROPERTY()
+	TArray<FGameplayAbilitySpecHandle> GrantedAbilityHandles;
+
+	UPROPERTY()
+	TArray<FActiveGameplayEffectHandle> OngoingEffectHandles;
+
 };

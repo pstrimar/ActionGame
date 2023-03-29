@@ -65,6 +65,12 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	FCharacterAnimationData CharacterAnimationData;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	TArray<TSubclassOf<class UGameplayAbility>> GrantedAbilities;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	TArray<TSubclassOf<UGameplayEffect>> OngoingEffects;
 };
 
 UENUM(BlueprintType)
@@ -73,4 +79,35 @@ enum class EItemState : uint8
 	None UMETA(DisplayName = "None"),
 	Equipped UMETA(DisplayName = "Equipped"),
 	Dropped UMETA(DisplayName = "Dropped")
+};
+
+UENUM(BlueprintType)
+enum class EMovementDirectionType : uint8
+{
+	None UMETA(DisplayName = "None"),
+	OrientToMovement UMETA(DisplayName = "OrientToMovement"),
+	Strafe UMETA(DisplayName = "Strafe"),
+};
+
+
+UCLASS(BlueprintType, Blueprintable)
+class UWeaponStaticData : public UItemStaticData
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	TSubclassOf<class UGameplayEffect> DamageEffect;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	USkeletalMesh* SkeletalMesh;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	UStaticMesh* StaticMesh;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	UAnimMontage* AttackMontage;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	float FireRate;
 };

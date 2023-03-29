@@ -26,6 +26,8 @@ AItemActor::AItemActor()
 void AItemActor::Init(UInventoryItemInstance* InInstance)
 {
 	ItemInstance = InInstance;
+
+	InitInternal();
 }
 
 void AItemActor::OnEquipped()
@@ -144,8 +146,23 @@ void AItemActor::BeginPlay()
 
 			SphereComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 			SphereComponent->SetGenerateOverlapEvents(true);
+
+			InitInternal();
 		}
 	}
+}
+
+void AItemActor::OnRep_ItemInstance(UInventoryItemInstance* OldItemInstance)
+{
+	if (IsValid(ItemInstance) && !IsValid(OldItemInstance))
+	{
+		InitInternal();
+	}
+}
+
+void AItemActor::InitInternal()
+{
+
 }
 
 // Called every frame

@@ -244,6 +244,12 @@ void AActionGameCharacter::SetupPlayerInputComponent(class UInputComponent* Play
 		{
 			EnhancedInputComponent->BindAction(UnequipInputAction, ETriggerEvent::Triggered, this, &AActionGameCharacter::OnUnequipTriggered);
 		}
+
+		if (AttackInputAction)
+		{
+			EnhancedInputComponent->BindAction(AttackInputAction, ETriggerEvent::Started, this, &AActionGameCharacter::OnAttackActionStarted);
+			EnhancedInputComponent->BindAction(AttackInputAction, ETriggerEvent::Completed, this, &AActionGameCharacter::OnAttackActionStopped);
+		}
 	}
 }
 
@@ -365,6 +371,22 @@ void AActionGameCharacter::OnUnequipTriggered(const FInputActionValue& Value)
 	EventPayload.EventTag = UInventoryComponent::UnequipTag;
 
 	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, UInventoryComponent::UnequipTag, EventPayload);
+}
+
+void AActionGameCharacter::OnAttackActionStarted(const FInputActionValue& Value)
+{
+	FGameplayEventData EventPayload;
+	EventPayload.EventTag = AttackStartedEventTag;
+
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, AttackStartedEventTag, EventPayload);
+}
+
+void AActionGameCharacter::OnAttackActionStopped(const FInputActionValue& Value)
+{
+	FGameplayEventData EventPayload;
+	EventPayload.EventTag = AttackStoppedEventTag;
+
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, AttackStoppedEventTag, EventPayload);
 }
 
 //////////////////////////////////////////////////////////////////////////

@@ -7,7 +7,10 @@
 #include "Net/UnrealNetwork.h"
 #include "Actors/ItemActor.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "AbilitySystemComponent.h"
+#include "AbilitySystemBlueprintLibrary.h"
 #include "GameFramework/Character.h"
+#include "AbilitySystemLog.h"
 
 void UInventoryItemInstance::Init(TSubclassOf<UItemStaticData> InItemStaticDataClass)
 {
@@ -51,10 +54,13 @@ void UInventoryItemInstance::OnEquipped(AActor* InOwner)
 		}
 	}
 
+	TryGrantAbilities(InOwner);
+	TryApplyEffects(InOwner);
+
 	bEquipped = true;
 }
 
-void UInventoryItemInstance::OnUnequipped()
+void UInventoryItemInstance::OnUnequipped(AActor* InOwner)
 {
 	if (ItemActor)
 	{
@@ -62,15 +68,105 @@ void UInventoryItemInstance::OnUnequipped()
 		ItemActor = nullptr;
 	}
 
+	TryRemoveAbilities(InOwner);
+	TryRemoveEffects(InOwner);
+
 	bEquipped = false;
 }
 
-void UInventoryItemInstance::OnDropped()
+void UInventoryItemInstance::OnDropped(AActor* InOwner)
 {
 	if (ItemActor)
 	{
 		ItemActor->OnDropped();
 	}
 
+	TryRemoveAbilities(InOwner);
+	TryRemoveEffects(InOwner);
+
 	bEquipped = false;
+}
+
+AItemActor* UInventoryItemInstance::GetItemActor() const
+{
+	return ItemActor;
+}
+
+void UInventoryItemInstance::TryGrantAbilities(AActor* InOwner)
+{
+	if (InOwner && InOwner->HasAuthority())
+	{
+		if (UAbilitySystemComponent* AbilityComponent = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(InOwner))
+		{
+			const UItemStaticData* StaticData = GetItemStaticData();
+
+			for (auto ItemAbility : StaticData->GrantedAbilities)
+			{
+				GrantedAbilityHandles.Add(AbilityComponent->GiveAbility(FGameplayAbilitySpec(ItemAbility)));
+			}
+		}
+	}
+}
+
+void UInventoryItemInstance::TryRemoveAbilities(AActor* InOwner)
+{
+	if (InOwner && InOwner->HasAuthority())
+	{
+		if (UAbilitySystemComponent* AbilityComponent = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(InOwner))
+		{
+			const UItemStaticData* StaticData = GetItemStaticData();
+
+			for (auto AbilityHandle : GrantedAbilityHandles)
+			{
+				AbilityComponent->ClearAbility(AbilityHandle);
+			}
+
+			GrantedAbilityHandles.Empty();
+		}
+	}
+}
+
+void UInventoryItemInstance::TryApplyEffects(AActor* InOwner)
+{
+	if (UAbilitySystemComponent* AbilityComponent = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(InOwner))
+	{
+		const UItemStaticData* ItemStaticData = GetItemStaticData();
+
+		FGameplayEffectContextHandle EffectContext = AbilityComponent->MakeEffectContext();
+
+		for (auto GameplayEffect : ItemStaticData->OngoingEffects)
+		{
+			if (!GameplayEffect.Get()) continue;
+
+			FGameplayEffectSpecHandle SpecHandle = AbilityComponent->MakeOutgoingSpec(GameplayEffect, 1, EffectContext);
+			if (SpecHandle.IsValid())
+			{
+				FActiveGameplayEffectHandle ActiveGEHandle = AbilityComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+				if (!ActiveGEHandle.WasSuccessfullyApplied())
+				{
+					ABILITY_LOG(Log, TEXT("Item %s failed to apply runtime effect %s"), *GetName(), *GetNameSafe(GameplayEffect));
+				}
+				else
+				{
+					OngoingEffectHandles.Add(ActiveGEHandle);
+				}
+			}
+		}
+	}
+}
+
+void UInventoryItemInstance::TryRemoveEffects(AActor* InOwner)
+{
+	if (UAbilitySystemComponent* AbilityComponent = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(InOwner))
+	{
+		for (FActiveGameplayEffectHandle ActiveEffectHandle : OngoingEffectHandles)
+		{
+			if (ActiveEffectHandle.IsValid())
+			{
+				AbilityComponent->RemoveActiveGameplayEffect(ActiveEffectHandle);
+			}
+		}
+	}
+
+	OngoingEffectHandles.Empty();
 }
