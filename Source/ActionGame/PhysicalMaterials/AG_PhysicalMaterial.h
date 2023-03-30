@@ -17,4 +17,10 @@ class ACTIONGAME_API UAG_PhysicalMaterial : public UPhysicalMaterial
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = PhysicalMaterial)
 	class USoundBase* FootstepSound = nullptr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = PhysicalMaterial)
+	USoundBase* PointImpactSound = nullptr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = PhysicalMaterial)
+	class UNiagaraSystem* PointImpactVFX = nullptr;
 };
