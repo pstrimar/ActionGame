@@ -15,6 +15,10 @@ void UAG_AttributeSetBase::PostGameplayEffectExecute(const struct FGameplayEffec
 	{
 		SetHealth(FMath::Clamp(GetHealth(), 0.f, GetMaxHealth()));
 	}
+	else if (Data.EvaluatedData.Attribute == GetStaminaAttribute())
+	{
+		SetStamina(FMath::Clamp(GetStamina(), 0.f, GetMaxStamina()));
+	}
 	else if (Data.EvaluatedData.Attribute == GetMaxMovementSpeedAttribute())
 	{
 		ACharacter* OwningCharacter = Cast<ACharacter>(GetOwningActor());
