@@ -17,5 +17,8 @@ class ACTIONGAME_API UGA_InventoryCombatAbility : public UGA_InventoryAbility
 public:
 	UFUNCTION(BlueprintPure)
 	FGameplayEffectSpecHandle GetWeaponEffectSpec(const FHitResult& InHitResult);
+
+	UFUNCTION(BlueprintPure)
+	const bool GetWeaponToFocusTraceResult(float TraceDistance, ETraceTypeQuery TraceType, FHitResult& OutHitResult);
 	
 };

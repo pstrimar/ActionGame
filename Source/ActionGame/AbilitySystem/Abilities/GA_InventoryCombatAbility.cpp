@@ -5,6 +5,10 @@
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "ActionGameTypes.h"
+#include "Inventory/ItemActors/WeaponItemActor.h"
+#include "Kismet/KismetSystemLibrary.h"
+#include "ActionGameCharacter.h"
+#include "Camera/CameraComponent.h"
 
 FGameplayEffectSpecHandle UGA_InventoryCombatAbility::GetWeaponEffectSpec(const FHitResult& InHitResult)
 {
@@ -22,4 +26,29 @@ FGameplayEffectSpecHandle UGA_InventoryCombatAbility::GetWeaponEffectSpec(const 
 		}
 	}
 	return FGameplayEffectSpecHandle();
+}
+
+const bool UGA_InventoryCombatAbility::GetWeaponToFocusTraceResult(float TraceDistance, ETraceTypeQuery TraceType, FHitResult& OutHitResult)
+{
+	AWeaponItemActor* WeaponItemActor = GetEquippedWeaponItemActor();
+
+	AActionGameCharacter* AActionGameCharacter = GetActionGameCharacterFromActorInfo();
+
+	const FTransform& CameraTransform = AActionGameCharacter->GetFollowCamera()->GetComponentTransform();
+
+	const FVector FocusTraceEnd = CameraTransform.GetLocation() + CameraTransform.GetRotation().Vector() * TraceDistance;
+
+	TArray<AActor*> ActorsToIgnore = { GetAvatarActorFromActorInfo() };
+
+	FHitResult FocusHit;
+
+	UKismetSystemLibrary::LineTraceSingle(this, CameraTransform.GetLocation(), FocusTraceEnd, TraceType, false, ActorsToIgnore, EDrawDebugTrace::None, FocusHit, true);
+
+	FVector MuzzleLocation = WeaponItemActor->GetMuzzleLocation();
+
+	const FVector WeaponTraceEnd = MuzzleLocation + (FocusHit.Location - MuzzleLocation).GetSafeNormal() * TraceDistance;
+
+	UKismetSystemLibrary::LineTraceSingle(this, MuzzleLocation, WeaponTraceEnd, TraceType, false, ActorsToIgnore, EDrawDebugTrace::None, OutHitResult, true);
+
+	return OutHitResult.bBlockingHit;
 }

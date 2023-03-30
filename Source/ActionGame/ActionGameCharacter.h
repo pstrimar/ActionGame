@@ -148,6 +148,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly)
 	UInputAction* AttackInputAction;
 
+	UPROPERTY(EditDefaultsOnly)
+	UInputAction* AimInputAction;
+
 	void OnMoveForwardAction(const FInputActionValue& Value);
 	void OnMoveSideAction(const FInputActionValue& Value);
 	void OnTurnAction(const FInputActionValue& Value);
@@ -163,6 +166,8 @@ protected:
 	void OnUnequipTriggered(const FInputActionValue& Value);
 	void OnAttackActionStarted(const FInputActionValue& Value);
 	void OnAttackActionStopped(const FInputActionValue& Value);
+	void OnAimActionStarted(const FInputActionValue& Value);
+	void OnAimActionStopped(const FInputActionValue& Value);
 
 	// Gameplay Events
 	UPROPERTY(EditDefaultsOnly)
@@ -173,6 +178,12 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly)
 	FGameplayTag AttackStoppedEventTag;
+
+	UPROPERTY(EditDefaultsOnly)
+	FGameplayTag AimStartedEventTag;
+
+	UPROPERTY(EditDefaultsOnly)
+	FGameplayTag AimStoppedEventTag;
 
 	UPROPERTY(EditDefaultsOnly)
 	FGameplayTagContainer InAirTags;
