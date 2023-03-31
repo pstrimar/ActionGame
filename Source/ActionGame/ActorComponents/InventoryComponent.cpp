@@ -11,6 +11,7 @@
 #include "Actors/ItemActor.h"
 #include "GameplayTagsManager.h"
 #include "Engine/ActorChannel.h"
+#include "AbilitySystemLog.h"
 
 FGameplayTag UInventoryComponent::EquipItemActorTag;
 FGameplayTag UInventoryComponent::DropItemTag;
@@ -271,8 +272,7 @@ void UInventoryComponent::HandleGameplayEventInternal(FGameplayEventData Payload
 
 				if (Payload.Instigator)
 				{
-					const AActor* Instigator = Payload.Instigator;
-					const_cast<AActor*>(Instigator)->Destroy();
+					const_cast<AActor*>(Payload.Instigator.Get())->Destroy();
 				}
 			}
 		}
